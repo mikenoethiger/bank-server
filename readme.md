@@ -2,7 +2,7 @@
 
 # About
 
-This is a hypothetical bank server, providing basic banking operations, such as creating an account or transfer money. Communication with clients is established through sockets. A custom text protocol ensures consent.
+Implementation of a "hypothetical" bank server, providing basic banking operations, such as creating an account or transfer money. Communication with clients is established through sockets. A custom text protocol ensures consent.
 
 # Protocol
 
@@ -69,9 +69,9 @@ This chapter is a summary of available actions. An action is something that a cl
 * `balance`: (float) An account balance
 * `active`: (int) Denotes whether an account is active/inactive. `0` denotes an inactive account, every other integer denotes an active account
 
-Sometimes, multiple entities of the same type appear in one request/response, in these cases above terms are suffixed with anything meaningful, but yet still adhere to above description, e.g. `account_from` and `account_to` are both of type `account`. 
+Sometimes, multiple entities of the same type appear in one request/response, in these cases above terms are suffixed with anything meaningful, but yet still adhere to above description, e.g. `account_from` and `account_to` are both of type `account`.
 
-Variadic entities are suffixed with `_0 ` and `_n`, e.g. 
+Variadic entities are suffixed with `_0 ` and `_n`, e.g.
 
 ```
 account_0
@@ -158,7 +158,7 @@ Errors: 3
 Request:
 
 ```
-5 
+5
 account_from
 account_to
 amount
@@ -195,7 +195,7 @@ Errors: 4|6
 Request:
 
 ```
-7 
+7
 account
 amount
 ```
@@ -218,4 +218,5 @@ Errors: 4|5|6
 | 3          | Account could not be closed.  |
 | 4          | Inactive Account.             |
 | 5          | Account Overdraw.             |
-| 6          | Ilegal argument.              |
+| 6          | Illegal argument.             |
+| 7          | Bad request.                  |
