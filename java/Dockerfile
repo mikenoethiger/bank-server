@@ -1,8 +1,10 @@
 FROM openjdk:15-slim
 
-COPY Server.java .
-COPY Client.java .
+COPY java/Server.java .
+COPY java/Client.java .
 RUN javac Server.java Client.java
 
+EXPOSE 5001
+
 ENTRYPOINT ["java"]
-CMD ["Server", "50001"]
+CMD ["Server", "5001"]

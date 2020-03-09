@@ -20,10 +20,10 @@ java Server
 java Client
 ```
 
-Run Server on port `50001`:
+Run Server on port `5001`:
 
 ```
-java Server 50001
+java Server 5001
 ```
 
 Send a request to the server via command line client:
@@ -35,21 +35,34 @@ java Client <ip> <port> <action> [arguments]
 E.g. create an account:
 
 ```
-java Client 127.0.0.1 50001 3 mike
+java Client 127.0.0.1 5001 3 mike
 ```
 
 In order to speak with the server from java code, refer to the [bank-client](https://github.com/mikenoethiger/bank-client) project which provides a java client implementation.
 
 # Run with Docker
 
+Alternatively use the docker image from [Dockerhub](https://hub.docker.com/repository/docker/mikenoethiger/bank-server) to run the server and/or client. You can find some examples in the following.
+
+Run server on (default) port `5001` in foreground:
+
+```
+docker run -p 5001:5001 mikeneothiger/bank-server
+```
+
+Run server on custom port `1234` in background:
+
+```
+docker run -d -p 1234:1234 mikenoethiger/bank-server Server 1234
+```
+
+
+
 # Build with Docker
 
 ```
-cd java
-docker build -t 
+docker build -t bank-server -f java/Dockerfile .
 ```
-
-
 
 # Protocol
 
