@@ -37,7 +37,7 @@ public class Server {
 	private static final char DELIMITER = '\n';
 
 	/* pool size for thread pool which handles requests */
-	private static final int POOL_SIZE = 10;
+	private static final int POOL_SIZE = 50;
 
 	/* states for request reading algorithm (see readRequest())*/
 	private static final int STATE_READ = 0;
