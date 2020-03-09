@@ -72,6 +72,8 @@ java Client 127.0.0.1 5001 3 mike
 
 In order to speak with the server from java code, refer to the [bank-client](https://github.com/mikenoethiger/bank-client) project which provides a java client implementation.
 
+A very simple alternative to the CLI client is using the [nc](https://linux.die.net/man/1/nc) program which ships out of the box in most linux distributions:
+
 ```
 nc 127.0.0.1 5001
 3
