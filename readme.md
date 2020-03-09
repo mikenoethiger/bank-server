@@ -117,7 +117,7 @@ balance
 active
 ```
 
-Errors: 1
+Errors: 1 Account does not exist
 
 ## Create Account (3)
 
@@ -134,7 +134,7 @@ ok
 account
 ```
 
-Errors: 2
+Errors: 2 Account could not be created
 
 ## Close Account (4)
 
@@ -151,7 +151,7 @@ Success Response:
 ok
 ```
 
-Errors: 3
+Errors: 3 Account could not be closed
 
 ## Transfer (5)
 
@@ -170,7 +170,7 @@ Success Response:
 ok
 ```
 
-Errors: 4|5|6
+Errors: 4 Inactive account | 5 Account overdraw | 6 Illegal argument
 
 ## Deposit (6)
 
@@ -188,7 +188,7 @@ Response:
 ok
 ```
 
-Errors: 4|6
+Errors: 4 Inactive account | 6 Illegal argument
 
 ## Withdraw (7)
 
@@ -206,7 +206,7 @@ Response:
 ok
 ```
 
-Errors: 4|5|6
+Errors: 4 Inactive account | 5 Account overdraw | 6 Illegal argument
 
 # Errors
 
@@ -216,7 +216,7 @@ Errors: 4|5|6
 | 1          | Account does not exist.       |
 | 2          | Account could not be created. |
 | 3          | Account could not be closed.  |
-| 4          | Inactive Account.             |
-| 5          | Account Overdraw.             |
+| 4          | Inactive account.             |
+| 5          | Account overdraw.             |
 | 6          | Illegal argument.             |
 | 7          | Bad request.                  |
