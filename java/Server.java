@@ -52,6 +52,9 @@ public class Server {
 	*/
 	private static final Bank BANK = new Bank();
 
+    private static int requests_processed = 0;
+    private static final Object LOCK = new Object();
+
     public static void main(String[] args) throws IOException {
 		if (args.length < 1) {
 			printUsage();
@@ -118,17 +121,16 @@ public class Server {
 				while (request.length > 0) {
 					System.out.println("request: " + Arrays.toString(request));
 					String[] response = processRequest(request);
+                    synchronized (Server.LOCK) {
+                        Server.requests_processed++;
+                    }
+                    System.out.println(Server.requests_processed);
 					System.out.println("response: " + Arrays.toString(response));
 					for (String line : response) {
 						writeString(out2, line);
 						writeString(out2, "\n");
-						// for (int i = 0; i < line.length(); i++) {
-						// 	out2.write(line.charAt(i));
-						// }
-						// out2.write('\n');
 					}
 					writeString(out2, "\n");
-					//out2.write('\n');
 					request = readRequest(in);
 				}
 				System.out.println("disconnected from " + remote.getHostName() + "...");
