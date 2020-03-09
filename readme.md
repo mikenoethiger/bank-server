@@ -7,6 +7,35 @@
 
 Implementation of a "hypothetical" bank server, providing basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full interface specification.) Communication with clients is established through sockets. A custom text protocol ensures consent (see chapter [Protocol](#Protocol).)
 
+# Public Server
+
+A live bank server is available on my public server: `178.128.198.205:5001`
+
+List account numbers using docker:
+
+```
+docker run --rm mikenoethiger/bank-server Client 178.128.198.205 5001 1
+```
+
+List account numbers using [nc](https://linux.die.net/man/1/nc) (available on Linux/Mac out of the box):
+
+```
+nc 178.128.198.205 5001
+1
+
+
+```
+
+List account numbers using java (requires to have this repository checked out):
+
+```
+cd java
+javac Client.java
+java Client 178.128.198.205 5001 1
+```
+
+For further instructions on how to run the server and make requests, check out [Run with Java](run-with-java) and [Run with Docker](run-with-docker).
+
 # Run with Java
 
 Compile:
@@ -42,8 +71,6 @@ java Client 127.0.0.1 5001 3 mike
 ```
 
 In order to speak with the server from java code, refer to the [bank-client](https://github.com/mikenoethiger/bank-client) project which provides a java client implementation.
-
-A very simple alternative to the CLI client is using the [nc](https://linux.die.net/man/1/nc) program which ships out of the box in most linux distributions:
 
 ```
 nc 127.0.0.1 5001
