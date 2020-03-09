@@ -11,14 +11,14 @@ import java.util.concurrent.TimeUnit;
 public class ConcurrencyTest {
 
     // private static final String IP = "192.168.1.136"; // raspberry
-    // private static final String IP = "178.128.198.205"; // do
-    private static final String IP = "127.0.0.1"; // local
+    private static final String IP = "178.128.198.205"; // do
+    // private static final String IP = "127.0.0.1"; // local
     private static final int PORT = 5001;
 
     private static final String ACCOUNT_NUMBER = "CH5610000000000000000";
 
     private static final int POOL_SIZE = 10;
-    private static final int REQUESTS_NUM = 1_000_000;
+    private static final int REQUESTS_NUM = 1_000;
 
     private final ExecutorService pool;
 
@@ -97,7 +97,7 @@ public class ConcurrencyTest {
     }
 
     private void testConcurrentDepositWithdraw() throws IOException, InterruptedException {
-        int amount = 1;
+        double amount = 10.5;
         String[] requests = new String[REQUESTS_NUM];
         int i = 0;
         for (; i < REQUESTS_NUM/2; i++) {
