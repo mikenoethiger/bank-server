@@ -1,6 +1,8 @@
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 import java.io.InputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -14,6 +16,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.lang.Runnable;
 
 public class Server {
 
@@ -27,6 +32,7 @@ public class Server {
 	private static final String[] ERROR_BAD_REQUEST = {"nok", "7", "Bad request."};
 
 	private static final char DELIMITER = '\n';
+	private static final int POOL_SIZE = 10;
 
 	private static final int STATE_READ = 0;
 	private static final int STATE_LINE_BREAK = 1;
@@ -36,169 +42,209 @@ public class Server {
 	private static final Bank BANK = new Bank();
 
     public static void main(String[] args) throws IOException {
+		ExecutorService pool = Executors.newFixedThreadPool(POOL_SIZE);
         ServerSocket server = new ServerSocket(PORT);
-        while (true) {
-			System.out.println("waiting for requests...");
-			try (Socket s = server.accept()) {
-				System.out.println("connected...");
-				InputStream in = s.getInputStream();
-				String[] request = readRequest(in);
-				System.out.println(Arrays.toString(request));
-				String[] response = processRequest(request);
-				System.out.println(Arrays.toString(response));
-				DataOutputStream out = new DataOutputStream(s.getOutputStream());
-				for (String line : response) {
-					out.writeChars(line);
-					out.writeChar('\n');
-				}
-				out.writeChar('\n');
-				out.close();
-			} catch (IOException e) {
-				System.out.println("could not accept connection");
+		System.out.println("listening...");
+
+		try {
+			while (true) {
+				pool.execute(new ConnectionHandler(server.accept(), BANK));
 			}
-			System.out.println("served request");
-        }
+		} catch (IOException e) {
+			pool.shutdown();
+		}
     }
 
-	private static String[] processRequest(String[] request) {
-		if (request.length < 1) return ERROR_BAD_REQUEST;
+	private static class ConnectionHandler implements Runnable {
 
-		int action;
-		try { action = Integer.parseInt(request[0]); }
-		catch (NumberFormatException e) { return ERROR_BAD_REQUEST; }
+		private final Socket socket;
+		private final Bank bank; /* this is where the accounts are stored (i.e. in memory) */
 
-		switch (action) {
-			case 1: return getAccountNumbers(request);
-			case 2: return getAccount(request);
-			case 3: return createAccount(request);
-			case 4: return closeAccount(request);
-			case 5: return transfer(request);
-			case 6: return deposit(request);
-			case 7: return withdraw(request);
-			default: return ERROR_BAD_REQUEST;
+		ConnectionHandler(Socket socket, Bank bank) throws IOException {
+			this.socket = socket;
+			this.bank = bank;
 		}
-	}
 
-	private static String[] readRequest(InputStream in) throws IOException {
-		int buf;
-		StringBuilder sb = new StringBuilder();
-		List<String> request = new ArrayList<>();
-		int state = STATE_READ;
-		while ((buf = in.read()) != -1) {
-			if (state == STATE_LINE_BREAK) {
-				// double line break denotes end of request
-				if (buf == DELIMITER) break;
-				else {
-					sb.append((char) buf);
-					state = STATE_READ;
+		public void run() {
+			InputStream in;
+			DataOutputStream out;
+			InetSocketAddress remote;
+
+			try {
+				in = socket.getInputStream();
+				out = new DataOutputStream(socket.getOutputStream());
+				remote = (InetSocketAddress) socket.getRemoteSocketAddress();
+				System.out.println("connected to " + remote.getHostName() + "...");
+
+				String[] request = readRequest(in);
+
+				while (request.length > 0) {
+					System.out.println("request: " + Arrays.toString(request));
+					String[] response = processRequest(request);
+					System.out.println("response: " + Arrays.toString(response));
+					for (String line : response) {
+						out.writeChars(line);
+						out.writeChars("\n");
+					}
+					out.writeChars("\n");
+					request = readRequest(in);
 				}
-			} else { // STATE_READ
-				if (buf == DELIMITER) {
-					request.add(sb.toString());
-					sb = new StringBuilder();
-					state = STATE_LINE_BREAK;
-				} else {
-					sb.append((char) buf);
-				}
+				System.out.println("disconnected from " + remote.getHostName() + "...");
+				out.close();
+				socket.close();
+			} catch (IOException e) {
+				System.out.println("failed to handle connection");
+			} finally {
+				try { socket.close(); }
+				catch (IOException e) {}
 			}
 		}
 
-		String[] request_arr = new String[request.size()];
-		request_arr = request.toArray(request_arr);
-		return request_arr;
-	}
+		private static String[] readRequest(InputStream in) throws IOException {
+			int buf;
+			StringBuilder sb = new StringBuilder();
+			List<String> request = new ArrayList<>();
+			int state = STATE_READ;
+			while ((buf = in.read()) != -1) {
+				if (state == STATE_LINE_BREAK) {
+					// double line break denotes end of request
+					if (buf == DELIMITER) break;
+					else {
+						sb.append((char) buf);
+						state = STATE_READ;
+					}
+				} else { // STATE_READ
+					if (buf == DELIMITER) {
+						request.add(sb.toString());
+						sb = new StringBuilder();
+						state = STATE_LINE_BREAK;
+					} else {
+						sb.append((char) buf);
+					}
+				}
+			}
 
-	private static String[] getAccountNumbers(String[] request) {
-		Set<String> accounts = BANK.getAccountNumbers();
-		String[] response = new String[accounts.size()+1];
-		response[0] = "ok";
-		int i = 1;
-		for (String a : accounts) {
-			response[i++] = a;
+			String[] request_arr = new String[request.size()];
+			request_arr = request.toArray(request_arr);
+			return request_arr;
 		}
-		return response;
-	}
 
-	private static String[] getAccount(String[] request) {
-		if (request.length < 2) return ERROR_BAD_REQUEST;
-		Account a = BANK.getAccount(request[1]);
-		if (a == null) return ERROR_ACCOUNT_DOES_NOT_EXIST;
-		return new String[]{"ok", a.getNumber(), a.getOwner(), String.valueOf(a.getBalance()), a.isActive() ? "1" : "0"};
-	}
+		private String[] processRequest(String[] request) {
+			if (request.length < 1) return ERROR_BAD_REQUEST;
 
-	private static String[] createAccount(String[] request) {
-		if (request.length < 2) return ERROR_BAD_REQUEST;
-		String account = BANK.createAccount(request[1]);
-		if (account == null) return ERROR_ACCOUNT_COULD_NOT_BE_CREATED;
-		return new String[]{"ok", account};
-	}
+			int action;
+			try { action = Integer.parseInt(request[0]); }
+			catch (NumberFormatException e) { return ERROR_BAD_REQUEST; }
 
-	private static String[] closeAccount(String[] request) {
-		if (request.length < 2) return ERROR_BAD_REQUEST;
-		boolean result = BANK.closeAccount(request[1]);
-		if (result) return new String[]{"ok"};
-		else return ERROR_ACCOUNT_COULD_NOT_BE_CLOSED;
-	}
+			switch (action) {
+				case 1: return getAccountNumbers(request);
+				case 2: return getAccount(request);
+				case 3: return createAccount(request);
+				case 4: return closeAccount(request);
+				case 5: return transfer(request);
+				case 6: return deposit(request);
+				case 7: return withdraw(request);
+				default: return ERROR_BAD_REQUEST;
+			}
+		}
 
-	private static String[] transfer(String[] request) {
-		if (request.length < 4) return ERROR_BAD_REQUEST;
+		/* ------------------
+		 * ACTIONS
+		 * ------------------
+		 */
 
-		// parse accounts
-		Account from = BANK.getAccount(request[1]);
-		Account to = BANK.getAccount(request[1]);
-		if (from == null || to == null) return ERROR_ACCOUNT_DOES_NOT_EXIST;
+		private String[] getAccountNumbers(String[] request) {
+			Set<String> accounts = bank.getAccountNumbers();
+			String[] response = new String[accounts.size()+1];
+			response[0] = "ok";
+			int i = 1;
+			for (String a : accounts) {
+				response[i++] = a;
+			}
+			return response;
+		}
 
-		// parse amount
-		double amount;
-		try { amount = Double.parseDouble(request[3]); }
-		catch (NumberFormatException e) { return ERROR_BAD_REQUEST; }
+		private String[] getAccount(String[] request) {
+			if (request.length < 2) return ERROR_BAD_REQUEST;
+			Account a = bank.getAccount(request[1]);
+			if (a == null) return ERROR_ACCOUNT_DOES_NOT_EXIST;
+			return new String[]{"ok", a.getNumber(), a.getOwner(), String.valueOf(a.getBalance()), a.isActive() ? "1" : "0"};
+		}
 
-		// transfer money
-		try { BANK.transfer(from, to, amount); }
-		catch (InactiveException e) { return ERROR_INACTIVE_ACCOUNT; }
-		catch (OverdrawException e) { return ERROR_ACCOUNT_OVERDRAW; }
-		catch (IllegalArgumentException e) { return ERROR_ILLEGAL_ARGUMENT; }
+		private String[] createAccount(String[] request) {
+			if (request.length < 2) return ERROR_BAD_REQUEST;
+			String account = bank.createAccount(request[1]);
+			if (account == null) return ERROR_ACCOUNT_COULD_NOT_BE_CREATED;
+			return new String[]{"ok", account};
+		}
 
-		return new String[]{"ok"};
-	}
+		private String[] closeAccount(String[] request) {
+			if (request.length < 2) return ERROR_BAD_REQUEST;
+			boolean result = bank.closeAccount(request[1]);
+			if (result) return new String[]{"ok"};
+			else return ERROR_ACCOUNT_COULD_NOT_BE_CLOSED;
+		}
 
-	private static String[] deposit(String[] request) {
-		if (request.length < 3) return ERROR_BAD_REQUEST;
+		private String[] transfer(String[] request) {
+			if (request.length < 4) return ERROR_BAD_REQUEST;
 
-		// parse account
-		Account a = BANK.getAccount(request[1]);
-		if (a == null) return ERROR_ACCOUNT_DOES_NOT_EXIST;
+			// parse accounts
+			Account from = bank.getAccount(request[1]);
+			Account to = bank.getAccount(request[1]);
+			if (from == null || to == null) return ERROR_ACCOUNT_DOES_NOT_EXIST;
 
-		// parse amount
-		double amount;
-		try { amount = Double.parseDouble(request[2]); }
-		catch (NumberFormatException e) { return ERROR_BAD_REQUEST; }
+			// parse amount
+			double amount;
+			try { amount = Double.parseDouble(request[3]); }
+			catch (NumberFormatException e) { return ERROR_BAD_REQUEST; }
 
-		try { a.deposit(amount); }
-		catch (InactiveException e) { return ERROR_INACTIVE_ACCOUNT; }
-		catch (IllegalArgumentException e) { return ERROR_ILLEGAL_ARGUMENT; }
+			// transfer money
+			try { bank.transfer(from, to, amount); }
+			catch (InactiveException e) { return ERROR_INACTIVE_ACCOUNT; }
+			catch (OverdrawException e) { return ERROR_ACCOUNT_OVERDRAW; }
+			catch (IllegalArgumentException e) { return ERROR_ILLEGAL_ARGUMENT; }
 
-		return new String[]{"ok"};
-	}
+			return new String[]{"ok"};
+		}
 
-	private static String[] withdraw(String[] request) {
-		if (request.length < 3) return ERROR_BAD_REQUEST;
+		private String[] deposit(String[] request) {
+			if (request.length < 3) return ERROR_BAD_REQUEST;
 
-		// parse account
-		Account a = BANK.getAccount(request[1]);
-		if (a == null) return ERROR_ACCOUNT_DOES_NOT_EXIST;
+			// parse account
+			Account a = bank.getAccount(request[1]);
+			if (a == null) return ERROR_ACCOUNT_DOES_NOT_EXIST;
 
-		// parse amount
-		double amount;
-		try { amount = Double.parseDouble(request[2]); }
-		catch (NumberFormatException e) { return ERROR_BAD_REQUEST; }
+			// parse amount
+			double amount;
+			try { amount = Double.parseDouble(request[2]); }
+			catch (NumberFormatException e) { return ERROR_BAD_REQUEST; }
 
-		try { a.withdraw(amount); }
-		catch (InactiveException e) { return ERROR_INACTIVE_ACCOUNT; }
-		catch (OverdrawException e) { return ERROR_ACCOUNT_OVERDRAW; }
-		catch (IllegalArgumentException e) { return ERROR_ILLEGAL_ARGUMENT; }
+			try { a.deposit(amount); }
+			catch (InactiveException e) { return ERROR_INACTIVE_ACCOUNT; }
+			catch (IllegalArgumentException e) { return ERROR_ILLEGAL_ARGUMENT; }
 
-		return new String[]{"ok"};
+			return new String[]{"ok"};
+		}
+
+		private String[] withdraw(String[] request) {
+			if (request.length < 3) return ERROR_BAD_REQUEST;
+
+			// parse account
+			Account a = bank.getAccount(request[1]);
+			if (a == null) return ERROR_ACCOUNT_DOES_NOT_EXIST;
+
+			// parse amount
+			double amount;
+			try { amount = Double.parseDouble(request[2]); }
+			catch (NumberFormatException e) { return ERROR_BAD_REQUEST; }
+
+			try { a.withdraw(amount); }
+			catch (InactiveException e) { return ERROR_INACTIVE_ACCOUNT; }
+			catch (OverdrawException e) { return ERROR_ACCOUNT_OVERDRAW; }
+			catch (IllegalArgumentException e) { return ERROR_ILLEGAL_ARGUMENT; }
+
+			return new String[]{"ok"};
+		}
 	}
 
 	public static class Bank {
@@ -302,7 +348,7 @@ public class Server {
 			balance -= amount;
 		}
 
-		void makeInactive() {
+		synchronized void makeInactive() {
 			active = false;
 		}
 	}
