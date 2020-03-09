@@ -1,5 +1,8 @@
 
 
+* Docker: [dockerhub.com/mikenoethiger/bank-server](https://hub.docker.com/repository/docker/mikenoethiger/bank-server)
+* Client implementation [github.com/mikenoethiger/bank-client](https://github.com/mikenoethiger/bank-client)
+
 # About
 
 Implementation of a "hypothetical" bank server, providing basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full interface specification.) Communication with clients is established through sockets. A custom text protocol ensures consent (see chapter [Protocol](#Protocol).)
@@ -26,7 +29,7 @@ Run Server on port `5001`:
 java Server 5001
 ```
 
-Send a request to the server via command line client:
+Send a request to the server via command line (CLI) client:
 
 ```
 java Client <ip> <port> <action> [arguments]
@@ -40,28 +43,68 @@ java Client 127.0.0.1 5001 3 mike
 
 In order to speak with the server from java code, refer to the [bank-client](https://github.com/mikenoethiger/bank-client) project which provides a java client implementation.
 
+A very simple alternative to the CLI client is using the [nc](https://linux.die.net/man/1/nc) program which ships out of the box in most linux distributions:
+
+```
+nc 127.0.0.1 5001
+3
+mike
+
+
+```
+
+(First enter the nc command, then the text you want to send to the server, make sure to terminate with two line breaks, otherwise the server waits for the end of the request.)
+
 # Run with Docker
 
 Alternatively use the docker image from [Dockerhub](https://hub.docker.com/repository/docker/mikenoethiger/bank-server) to run the server and/or client. You can find some examples in the following.
 
-Run server on (default) port `5001` in foreground:
+## Server Usage
+
+Run server on (default) port `5001` in foreground (will be deleted upon `CTRL+C`):
 
 ```
-docker run -p 5001:5001 mikeneothiger/bank-server
+docker run --rm -p 5001:5001 mikenoethiger/bank-server
 ```
 
-Run server on custom port `1234` in background:
+Run server on custom port `1234` in background (`-d`) and name the container `bank-server`:
 
 ```
-docker run -d -p 1234:1234 mikenoethiger/bank-server Server 1234
+docker run -d -p 1234:1234 --name bank-server mikenoethiger/bank-server Server 1234
 ```
 
-
-
-# Build with Docker
+Show `stdout` of a named container:
 
 ```
-docker build -t bank-server -f java/Dockerfile .
+docker logs bank-server
+```
+
+Stop and remove a named container:
+
+```
+docker rm -f bank-sever
+```
+
+## Client Usage
+
+The same docker image also contains the compiled CLI client. If both, the client and the server run in a container they need to be connected to the same docker network, otherwise the client can't reach the server.
+
+Create a docker network (excute for once only):
+
+```
+docker network create bank-server
+```
+
+Start a server that is attached to the network:
+
+```
+docker run --rm -d -p 5001:5001 --name bank-server --network bank-server mikenoethiger/bank-server
+```
+
+Send requests to `bank-server` container:
+
+```
+docker run --rm --network bank-server mikenoethiger/bank-server Client bank-server 5001 3 mike
 ```
 
 # Protocol
