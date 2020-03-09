@@ -5,26 +5,75 @@ import java.io.IOException;
 
 public class Client {
 
-	private static final String IP = "127.0.0.1";
-	private static final int PORT = 50001;
 	private static final String request = "3\nmike nöthiger\n\n";
+
 	public static void main(String[] args) throws IOException {
-		Socket s = new Socket(IP, PORT);
+		if (args.length < 3) {
+			printUsage();
+			return;
+		}
+
+		String ip = args[0];
+		int port = Integer.parseInt(args[1]);
+
+		Socket s;
+		try {
+			s = new Socket(ip, port);
+		} catch (IOException e) {
+			System.out.println("failed to connect to " + ip + ":" + port + ": " + e.getMessage());
+			return;
+		}
+
 		OutputStream out = s.getOutputStream();
 		InputStream in = s.getInputStream();
 
-		System.out.println("writing request...");
-		for (int i = 0; i < request.length(); i++) {
-			out.write(request.charAt(i));
+		// write request
+		for (int i = 2; i < args.length; i++) {
+			writeString(out, args[i] + "\n");
 		}
-		System.out.println("reading response...");
+		writeString(out, "\n");
 
-		int buf;
-		while ((buf = in.read()) != -1) {
-			System.out.print((char) buf);
-		}
-		System.out.println();
+		// read response
+        StringBuilder sb = new StringBuilder();
+        while (readLine(sb, in) > 1) {
+			System.out.println(sb.toString());
+            sb = new StringBuilder();
+        }
 
 		s.close();
 	}
+
+	private static void printUsage() {
+		System.out.println("ABOUT");
+		System.out.println("    CLI client for sending requests to bank-server (see github.com/mikenoethiger/bank-server)");
+		System.out.println("USAGE");
+		System.out.println("    java Client ip port action [arguments]");
+		System.out.println("ACTIONS");
+		System.out.println(
+		"    Get Account Numbers: 1\n" +
+		"    Get Account:         2 account_number\n" +
+		"    Create Account:      3 owner\n" +
+		"    Close Account:       4 account_number\n" +
+		"    Transfer:            5 from_account_number to_accoutn_number amount\n" +
+		"    Deposit:             6 account_number amount\n" +
+		"    Withdraw:            7 account_number amount"
+		);
+	}
+
+	private static void writeString(OutputStream out, String s) throws IOException {
+		for (int i = 0; i < s.length(); i++) {
+			out.write(s.charAt(i));
+		}
+	}
+
+	private static int readLine(StringBuilder sb, InputStream in) throws IOException {
+        int bytes = 0;
+        int buf;
+        while ((buf = in.read()) != -1) {
+            bytes++;
+            if ((char) buf == '\n') break;
+            sb.append((char) buf);
+        }
+        return bytes;
+    }
 }

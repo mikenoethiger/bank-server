@@ -132,6 +132,9 @@ Success Response:
 ```
 ok
 account
+owner
+balance
+active
 ```
 
 Errors: 2 Account could not be created
@@ -168,6 +171,8 @@ Success Response:
 
 ```
 ok
+balance_from
+balance_to
 ```
 
 Errors: 4 Inactive account | 5 Account overdraw | 6 Illegal argument
@@ -182,10 +187,11 @@ account
 amount
 ```
 
-Response:
+Success Response:
 
 ```
 ok
+balance
 ```
 
 Errors: 4 Inactive account | 6 Illegal argument
@@ -200,10 +206,11 @@ account
 amount
 ```
 
-Response:
+Sucess Response:
 
 ```
 ok
+balance
 ```
 
 Errors: 4 Inactive account | 5 Account overdraw | 6 Illegal argument

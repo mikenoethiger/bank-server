@@ -4,6 +4,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.InetSocketAddress;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.StringBuilder;
@@ -22,6 +23,7 @@ import java.lang.Runnable;
 
 public class Server {
 
+	/* error responses according to protocol specification (see readme.md) */
 	private static final String[] ERROR_INTERNAL_ERROR = {"nok", "0", "Internal error."};
 	private static final String[] ERROR_ACCOUNT_DOES_NOT_EXIST = {"nok", "1", "Account does not exist."};
 	private static final String[] ERROR_ACCOUNT_COULD_NOT_BE_CREATED = {"nok", "2", "Account could not be created."};
@@ -31,14 +33,26 @@ public class Server {
 	private static final String[] ERROR_ILLEGAL_ARGUMENT = {"nok", "6", "Illegal argument."};
 	private static final String[] ERROR_BAD_REQUEST = {"nok", "7", "Bad request."};
 
+	/* request/response delimiter according to protocol specification (see readme.md) */
 	private static final char DELIMITER = '\n';
+
+	/* pool size for thread pool which handles requests */
 	private static final int POOL_SIZE = 10;
 
+	/* states for request reading algorithm (see readRequest())*/
 	private static final int STATE_READ = 0;
 	private static final int STATE_LINE_BREAK = 1;
 
+	/* socket port for incoming connections */
     private static final int PORT = 50001;
 
+	/* Bank instance for manipulating bank data.
+	   The current implementation stores all data
+	   inside the bank instance. I.e. alla data
+	   will be lost upon program termination.
+	   This could be changed with another bank
+	   implementaion.
+	*/
 	private static final Bank BANK = new Bank();
 
     public static void main(String[] args) throws IOException {
@@ -55,6 +69,16 @@ public class Server {
 		}
     }
 
+	/* Handles one connection, i.e. one client. Instantiate multiple
+	   ConnectionHandler's and run each in a separate thread in order
+	   to serve several clients in parallel. The handler starts to read
+	   and process requests from the socket as soon as run() is called
+	   run() returns as soon as the client closes the socket connection.
+
+	   It would be reasonable to close the connection from the server side
+	   if no request was received for a longer time period. This behavior
+	   is currently not implemented.
+	*/
 	private static class ConnectionHandler implements Runnable {
 
 		private final Socket socket;
@@ -68,11 +92,13 @@ public class Server {
 		public void run() {
 			InputStream in;
 			DataOutputStream out;
+			OutputStream out2;
 			InetSocketAddress remote;
 
 			try {
 				in = socket.getInputStream();
 				out = new DataOutputStream(socket.getOutputStream());
+				out2 = socket.getOutputStream();
 				remote = (InetSocketAddress) socket.getRemoteSocketAddress();
 				System.out.println("connected to " + remote.getHostName() + "...");
 
@@ -83,10 +109,15 @@ public class Server {
 					String[] response = processRequest(request);
 					System.out.println("response: " + Arrays.toString(response));
 					for (String line : response) {
-						out.writeChars(line);
-						out.writeChars("\n");
+						writeString(out2, line);
+						writeString(out2, "\n");
+						// for (int i = 0; i < line.length(); i++) {
+						// 	out2.write(line.charAt(i));
+						// }
+						// out2.write('\n');
 					}
-					out.writeChars("\n");
+					writeString(out2, "\n");
+					//out2.write('\n');
 					request = readRequest(in);
 				}
 				System.out.println("disconnected from " + remote.getHostName() + "...");
@@ -99,6 +130,23 @@ public class Server {
 				catch (IOException e) {}
 			}
 		}
+
+		/**
+	     * Write a string to out.
+	     *
+	     * Writes each character as 1 byte as opposed to
+	     * {@link DataOutputStream#writeChars(String)}
+	     * which writes each character as 2 bytes.
+	     *
+	     * @param out stream to write to
+	     * @param s string to write
+	     * @throws IOException
+	     */
+	    private static void writeString(OutputStream out, String s) throws IOException {
+	        for (int i = 0; i < s.length(); i++) {
+	            out.write(s.charAt(i));
+	        }
+	    }
 
 		private static String[] readRequest(InputStream in) throws IOException {
 			int buf;
@@ -149,9 +197,8 @@ public class Server {
 		}
 
 		/* ------------------
-		 * ACTIONS
-		 * ------------------
-		 */
+		    ACTION HANDLES
+		   ------------------ */
 
 		private String[] getAccountNumbers(String[] request) {
 			Set<String> accounts = bank.getAccountNumbers();
@@ -173,9 +220,9 @@ public class Server {
 
 		private String[] createAccount(String[] request) {
 			if (request.length < 2) return ERROR_BAD_REQUEST;
-			String account = bank.createAccount(request[1]);
+			Account account = bank.createAccount(request[1]);
 			if (account == null) return ERROR_ACCOUNT_COULD_NOT_BE_CREATED;
-			return new String[]{"ok", account};
+			return new String[]{"ok", account.getNumber(), account.getOwner(), String.valueOf(account.getBalance()), account.isActive() ? "1" : "0" };
 		}
 
 		private String[] closeAccount(String[] request) {
@@ -190,7 +237,7 @@ public class Server {
 
 			// parse accounts
 			Account from = bank.getAccount(request[1]);
-			Account to = bank.getAccount(request[1]);
+			Account to = bank.getAccount(request[2]);
 			if (from == null || to == null) return ERROR_ACCOUNT_DOES_NOT_EXIST;
 
 			// parse amount
@@ -204,7 +251,7 @@ public class Server {
 			catch (OverdrawException e) { return ERROR_ACCOUNT_OVERDRAW; }
 			catch (IllegalArgumentException e) { return ERROR_ILLEGAL_ARGUMENT; }
 
-			return new String[]{"ok"};
+			return new String[]{"ok", String.valueOf(from.getBalance()), String.valueOf(to.getBalance())};
 		}
 
 		private String[] deposit(String[] request) {
@@ -223,7 +270,7 @@ public class Server {
 			catch (InactiveException e) { return ERROR_INACTIVE_ACCOUNT; }
 			catch (IllegalArgumentException e) { return ERROR_ILLEGAL_ARGUMENT; }
 
-			return new String[]{"ok"};
+			return new String[]{"ok", String.valueOf(a.getBalance())};
 		}
 
 		private String[] withdraw(String[] request) {
@@ -243,7 +290,7 @@ public class Server {
 			catch (OverdrawException e) { return ERROR_ACCOUNT_OVERDRAW; }
 			catch (IllegalArgumentException e) { return ERROR_ILLEGAL_ARGUMENT; }
 
-			return new String[]{"ok"};
+			return new String[]{"ok", String.valueOf(a.getBalance())};
 		}
 	}
 
@@ -263,7 +310,7 @@ public class Server {
 		}
 
 		/* thread safe */
-		public String createAccount(String owner) {
+		public Account createAccount(String owner) {
 			// limit memory usage
 			if (accounts_num > MAX_ACCOUNTS) return null;
 			Account a = new Account(owner);
@@ -271,15 +318,42 @@ public class Server {
 			synchronized (accounts_num_lock) {
 				accounts_num++;
 			}
-			return a.number;
+			return a;
 		}
 
+		/* thread safe */
 		public boolean closeAccount(String number) {
 			if (!accounts.containsKey(number)) return false;
 			Account a = accounts.get(number);
-			if (!a.isActive()) return false;
-			if (a.balance > 0) return false;
-			a.makeInactive();
+			/* we use the transfer_lock because changing activeness
+			   might interfere with changing balances; a transfer is
+			   not allowed for inactive accounts and making an account
+			   inactive is not allowed with a positive balance.
+			   Imagine the following scenario:
+			   Account: active=true balance=0
+			   Time  Thread1           Thread2
+			    1     closeAccount      deposit(10)
+			    2       balance=0? yes    active? yes
+			    3       make inactive     set balance 10
+			   Account: active=false balance=10
+			   Now with synchronization:
+			   Account: active=true balance=0
+			   Time   Thread1           Thread2
+			    1      closeAccount      deposit(10)
+			    2       lock (granted)    lock (blocks)
+			    3       balance=0? yes     |
+			    4       make inactive      |
+			    5       unlock            lock (granted)
+			    6                         active? false
+			    7                         early return
+			    8                         unlock
+			   Account: active=false balance=0
+			*/
+			synchronized (transfer_lock) {
+				if (!a.isActive()) return false;
+				if (a.balance > 0) return false;
+				a.makeInactive();
+			}
 			return true;
 		}
 
