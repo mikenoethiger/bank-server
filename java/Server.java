@@ -43,9 +43,6 @@ public class Server {
 	private static final int STATE_READ = 0;
 	private static final int STATE_LINE_BREAK = 1;
 
-	/* socket port for incoming connections */
-    private static final int PORT = 50001;
-
 	/* Bank instance for manipulating bank data.
 	   The current implementation stores all data
 	   inside the bank instance. I.e. alla data
@@ -56,8 +53,14 @@ public class Server {
 	private static final Bank BANK = new Bank();
 
     public static void main(String[] args) throws IOException {
+		if (args.length < 1) {
+			printUsage();
+			return;
+		}
+		int port = Integer.parseInt(args[0]);
+
 		ExecutorService pool = Executors.newFixedThreadPool(POOL_SIZE);
-        ServerSocket server = new ServerSocket(PORT);
+        ServerSocket server = new ServerSocket(port);
 		System.out.println("listening...");
 
 		try {
@@ -68,6 +71,14 @@ public class Server {
 			pool.shutdown();
 		}
     }
+
+	private static void printUsage() {
+		System.out.println("ABOUT");
+		System.out.println("    Hypothetical bank-server (see github.com/mikenoethiger/bank-server).");
+		System.out.println("    Starts to listen for connections on specified port.");
+		System.out.println("USAGE");
+		System.out.println("    java Server <port>");
+	}
 
 	/* Handles one connection, i.e. one client. Instantiate multiple
 	   ConnectionHandler's and run each in a separate thread in order

@@ -2,7 +2,54 @@
 
 # About
 
-Implementation of a "hypothetical" bank server, providing basic banking operations, such as creating an account or transfer money. Communication with clients is established through sockets. A custom text protocol ensures consent.
+Implementation of a "hypothetical" bank server, providing basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full interface specification.) Communication with clients is established through sockets. A custom text protocol ensures consent (see chapter [Protocol](#Protocol).)
+
+# Run with Java
+
+Compile:
+
+```
+cd java
+javac Server.java Client.java
+```
+
+Show usages:
+
+```
+java Server
+java Client
+```
+
+Run Server on port `50001`:
+
+```
+java Server 50001
+```
+
+Send a request to the server via command line client:
+
+```
+java Client <ip> <port> <action> [arguments]
+```
+
+E.g. create an account:
+
+```
+java Client 127.0.0.1 50001 3 mike
+```
+
+In order to speak with the server from java code, refer to the [bank-client](https://github.com/mikenoethiger/bank-client) project which provides a java client implementation.
+
+# Run with Docker
+
+# Build with Docker
+
+```
+cd java
+docker build -t 
+```
+
+
 
 # Protocol
 

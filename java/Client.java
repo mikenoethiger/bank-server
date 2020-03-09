@@ -3,9 +3,11 @@ import java.io.OutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 
+/* Simple command line client to send requests to a server.
+ * Compile:    javac Client
+ * Show usage: java  Client
+**/
 public class Client {
-
-	private static final String request = "3\nmike nöthiger\n\n";
 
 	public static void main(String[] args) throws IOException {
 		if (args.length < 3) {
@@ -47,7 +49,7 @@ public class Client {
 		System.out.println("ABOUT");
 		System.out.println("    CLI client for sending requests to bank-server (see github.com/mikenoethiger/bank-server)");
 		System.out.println("USAGE");
-		System.out.println("    java Client ip port action [arguments]");
+		System.out.println("    java Client <ip> <port> <action> [arguments]");
 		System.out.println("ACTIONS");
 		System.out.println(
 		"    Get Account Numbers: 1\n" +
