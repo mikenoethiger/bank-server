@@ -34,7 +34,7 @@ javac Client.java
 java Client 178.128.198.205 5001 1
 ```
 
-For further instructions on how to run the server and make requests, check out [Run with Java](run-with-java) and [Run with Docker](run-with-docker).
+For further instructions on how to run the server and make requests, check out [Run with Java](#run-with-java) and [Run with Docker](#run-with-docker).
 
 # Run with Java
 
@@ -82,13 +82,13 @@ mike
 
 ```
 
-(First enter the nc command, then the text you want to send to the server, make sure to terminate with two line breaks, otherwise the server waits for the end of the request.)
+First enter the nc command, then the text you want to send to the server. Make sure to terminate the request with two line breaks, otherwise the server waits for request termination (this is part of the [Protocol](#protocol).)
 
 # Run with Docker
 
-Alternatively use the docker image from [Dockerhub](https://hub.docker.com/repository/docker/mikenoethiger/bank-server) to run the server and/or client. You can find some examples in the following.
+Alternatively use the docker image published on [Dockerhub](https://hub.docker.com/repository/docker/mikenoethiger/bank-server) to run the server and/or client. You can find some examples in the following.
 
-## Server Usage
+## Docker Server Usage
 
 Run server on (default) port `5001` in foreground (will be deleted upon `CTRL+C`):
 
@@ -114,11 +114,11 @@ Stop and remove a named container:
 docker rm -f bank-sever
 ```
 
-## Client Usage
+## Docker Client Usage
 
-The same docker image also contains the compiled CLI client. If both, the client and the server run in a container they need to be connected to the same docker network, otherwise the client can't reach the server.
+The same docker image also contains the compiled CLI client. If both, the client and the server run in a container they need to be connected to the same docker network in order to communicate with each other.
 
-Create a docker network (excute for once only):
+Create a docker network (excute only once):
 
 ```
 docker network create bank-server
@@ -130,7 +130,7 @@ Start a server that is attached to the network:
 docker run --rm -d -p 5001:5001 --name bank-server --network bank-server mikenoethiger/bank-server
 ```
 
-Send requests to `bank-server` container:
+Send requests to the `bank-server` container:
 
 ```
 docker run --rm --network bank-server mikenoethiger/bank-server Client bank-server 5001 3 mike
@@ -138,7 +138,7 @@ docker run --rm --network bank-server mikenoethiger/bank-server Client bank-serv
 
 # Protocol
 
-Communication between server and client is established through sockets. A simple text protocol ensures consent between the server and client. It is subject of this chapter to reveal the mechanics of this protocol.
+Communication between server and client is established through sockets. A simple text protocol ensures consent between the parties. This chapter explains in detail how this protocol works. You might want to jump to the [Actions](#Actions) chapter if you're only interested in the usages / API specification.
 
 *Request* refers to data that is sent from client to server. *Response* refers to data that is sent from server to client.
 
