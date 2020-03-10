@@ -124,7 +124,7 @@ public class Server {
                     synchronized (Server.LOCK) {
                         Server.requests_processed++;
                     }
-                    System.out.println(Server.requests_processed);
+                    // System.out.println(Server.requests_processed);
 					System.out.println("response: " + Arrays.toString(response));
 					for (String line : response) {
 						writeString(out2, line);
