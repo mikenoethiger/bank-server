@@ -42,7 +42,7 @@ public class ConcurrencyTest2 {
         public void run() {
             for(int i = 0; i < ConcurrencyTest2.ITERATIONS; i++) {
                 // synchronized (ConcurrencyTest2.LOCK) {
-                    ConcurrencyTest2.counter++;
+                ConcurrencyTest2.counter++;
                 // }
             }
         }

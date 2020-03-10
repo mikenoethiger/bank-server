@@ -63,37 +63,37 @@ public class ConcurrencyTest {
 
         @Override
         public void run() {
-			try {
-				Socket socket = new Socket(IP, PORT);
+            try {
+                Socket socket = new Socket(IP, PORT);
                 OutputStream out = socket.getOutputStream();
                 InputStream in = socket.getInputStream();
-	            for (int i = begin; i < end; i++) {
-					writeString(out, requests[i]);
+                for (int i = begin; i < end; i++) {
+                    writeString(out, requests[i]);
                     discardResponse(in);
-	            }
-				socket.close();
-			}
-			catch (IOException e) { e.printStackTrace(); }
+                }
+                socket.close();
+            }
+            catch (IOException e) { e.printStackTrace(); }
         }
 
-		private static void discardResponse(InputStream in) throws IOException {
-			int buf;
-			boolean lineBreak = false;
-			while ((buf = in.read()) != -1) {
+        private static void discardResponse(InputStream in) throws IOException {
+            int buf;
+            boolean lineBreak = false;
+            while ((buf = in.read()) != -1) {
                 if ((char) buf == '\n') {
                     if (lineBreak) break;
                     lineBreak = true;
                 } else {
                     lineBreak = false;
                 }
-			}
-		}
+            }
+        }
 
-		private static void writeString(OutputStream out, String s) throws IOException {
-			for (int i = 0; i < s.length(); i++) {
-				out.write(s.charAt(i));
-			}
-		}
+        private static void writeString(OutputStream out, String s) throws IOException {
+            for (int i = 0; i < s.length(); i++) {
+                out.write(s.charAt(i));
+            }
+        }
     }
 
     private void testConcurrentDepositWithdraw() throws IOException, InterruptedException {
@@ -104,7 +104,7 @@ public class ConcurrencyTest {
             requests[i] = actionDeposit(ACCOUNT_NUMBER, amount);
         }
         for (; i < REQUESTS_NUM; i++) {
-			requests[i] = actionWithdraw(ACCOUNT_NUMBER, amount);
+            requests[i] = actionWithdraw(ACCOUNT_NUMBER, amount);
         }
         shuffleArray(requests);
         shuffleArray(requests);
@@ -112,13 +112,13 @@ public class ConcurrencyTest {
         runRequestsConcurrently(requests);
     }
 
-	private static String actionDeposit(String accountNumber, double amount) {
-		return "6\n" + accountNumber + "\n" + amount + "\n\n";
-	}
+    private static String actionDeposit(String accountNumber, double amount) {
+        return "6\n" + accountNumber + "\n" + amount + "\n\n";
+    }
 
-	private static String actionWithdraw(String accountNumber, double amount) {
-		return "7\n" + accountNumber + "\n" + amount + "\n\n";
-	}
+    private static String actionWithdraw(String accountNumber, double amount) {
+        return "7\n" + accountNumber + "\n" + amount + "\n\n";
+    }
 
     private void shuffleArray(String[] requests) {
         Random rnd = ThreadLocalRandom.current();
