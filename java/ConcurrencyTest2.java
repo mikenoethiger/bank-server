@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ConcurrencyTest2 {
 
-    public static final int ITERATIONS = 10000;
+    public static final int ITERATIONS = 10_000;
     public static final int THREADS = 10;
     private static final Object LOCK = new Object();
     public static int counter = 0;
@@ -41,9 +41,9 @@ public class ConcurrencyTest2 {
 
         public void run() {
             for(int i = 0; i < ConcurrencyTest2.ITERATIONS; i++) {
-                synchronized (ConcurrencyTest2.LOCK) {
+                // synchronized (ConcurrencyTest2.LOCK) {
                     ConcurrencyTest2.counter++;
-                }
+                // }
             }
         }
     }

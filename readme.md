@@ -5,11 +5,11 @@
 
 # About
 
-Implementation of a "hypothetical" bank server, providing basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full interface specification.) Communication with clients is established through sockets. A custom text protocol ensures consent (see chapter [Protocol](#Protocol).)
+Implementation of a "hypothetical" bank server, providing basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full api specification.) Communication with clients is established through sockets. A custom text protocol ensures consent (see chapter [Protocol](#Protocol).)
 
 # Public Server
 
-A live bank server is available on my public server: `178.128.198.205:5001`
+I'm serving the bank service on this public IP: `178.128.198.205:5001`
 
 List account numbers using docker:
 
@@ -26,7 +26,7 @@ nc 178.128.198.205 5001
 
 ```
 
-List account numbers using java (requires to have this repository checked out):
+List account numbers using java (requires your working directory to be in the repository root):
 
 ```
 cd java
