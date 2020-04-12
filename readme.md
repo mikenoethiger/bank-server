@@ -1,7 +1,6 @@
+[bank-server](https://hub.docker.com/repository/docker/mikenoethiger/bank-server) Docker Image
 
-
-* Docker Image: [bank-server](https://hub.docker.com/repository/docker/mikenoethiger/bank-server)
-* Client implementation [bank-client](https://github.com/mikenoethiger/bank-client)
+[bank-client](https://github.com/mikenoethiger/bank-client) Client Code
 
 # About
 
