@@ -1,10 +1,10 @@
-[bank-server](https://hub.docker.com/repository/docker/mikenoethiger/bank-server) Docker Image
-
-[bank-client](https://github.com/mikenoethiger/bank-client) Client Code
-
 # About
 
 Implementation of a "hypothetical" bank server, providing basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full api specification.) Communication with clients is established through sockets. A custom text protocol ensures consent (see chapter [Protocol](#Protocol).)
+
+[bank-server](https://hub.docker.com/repository/docker/mikenoethiger/bank-server) Docker Image
+
+[bank-client](https://github.com/mikenoethiger/bank-client) Client Code
 
 # Run with Java
 
