@@ -1,40 +1,9 @@
 
-
-* Docker Image: [bank-server](https://hub.docker.com/repository/docker/mikenoethiger/bank-server)
-* Client implementation [bank-client](https://github.com/mikenoethiger/bank-client)
+[dockerhub](https://hub.docker.com/repository/docker/mikenoethiger/bank-server) | [client implementation](https://github.com/mikenoethiger/bank-client) 
 
 # About
 
-Implementation of a "hypothetical" bank server, providing basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full api specification.) Communication with clients is established through sockets. A custom text protocol ensures consent (see chapter [Protocol](#Protocol).)
-
-# Public Server
-
-I'm serving the bank service on this public IP: `178.128.198.205:5001`
-
-List account numbers using docker:
-
-```
-docker run --rm mikenoethiger/bank-server Client 178.128.198.205 5001 1
-```
-
-List account numbers using [nc](https://linux.die.net/man/1/nc) (available on Linux/Mac out of the box):
-
-```
-nc 178.128.198.205 5001
-1
-
-
-```
-
-List account numbers using java (requires your working directory to be in the repository root):
-
-```
-cd java
-javac Client.java
-java Client 178.128.198.205 5001 1
-```
-
-For further instructions on how to run the server and make requests, check out [Run with Java](#run-with-java) and [Run with Docker](#run-with-docker).
+Minimal bank server, providing basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full api specification.) Communication with clients is established through sockets. A custom text protocol ensures consent (see chapter [Protocol](#Protocol).)
 
 # Run with Java
 
@@ -118,7 +87,7 @@ docker rm -f bank-sever
 
 The same docker image also contains the compiled CLI client. If both, the client and the server run in a container they need to be connected to the same docker network in order to communicate with each other.
 
-Create a docker network (excute only once):
+Create a docker network (execute only once):
 
 ```
 docker network create bank-server
@@ -169,25 +138,21 @@ action\n[argument1]\n[argument2]\n\n
 Each response shall adhere to the following format:
 
 ```
-ok|nok
-[error_number]
-[error_text]
-[response1]
-[response2]
+[status_code]
+[response_data1]
+[response_data2]
 
 ```
 
-* `ok|nok`: Determines whether the the request could be processed with (`nok`) or without (`ok`) errors
-* `error_number`: An integer that is present in case of `nok`. See chapter **Errors** for details on error codes.
-* `error_text`: A string that is present in case of `nok`. Human readable description of the error.
-* `response_n`: Variadic responses, that is zero or more responses that provide additional information about the requested action. Details on action responses can be found in the **Actions** chapter.
-* The delimiter between described response parts is the new line character `\n`
-* The response ends with two consecutive new line characters `\n\n`
+* `status_code`: An integer representing the status of the processed request (0=ok, everything else is an error code.) See [Status Codes](#status-codes) for details on status codes.
+* `response_data_n`: Zero or more lines containing response data for the requested action. If status code is an error, the first line of response data is the error description by convention. See [Actions](#actions) chapter for response data documentation.
+* Response data is delimited with the new line character `\n`
+* The whole response ends with two consecutive new line characters `\n\n`
 
 Actual response encoding:
 
 ```
-ok|nok\n[error_number]\n[error_text]\n[response1]\n[response2]\n\n
+[status_code]\n[response_data1]\n[response_data2]\n\n
 ```
 
 # Actions
@@ -225,7 +190,7 @@ Request:
 Success Response:
 
 ```
-ok
+0
 account_1
 account_n
 ```
@@ -242,7 +207,7 @@ account
 Success Response:
 
 ```
-ok
+0
 account
 owner
 balance
@@ -262,7 +227,7 @@ Request:
 Success Response:
 
 ```
-ok
+0
 account
 owner
 balance
@@ -283,7 +248,7 @@ account
 Success Response:
 
 ```
-ok
+0
 ```
 
 Errors: 3 Account could not be closed
@@ -302,7 +267,7 @@ amount
 Success Response:
 
 ```
-ok
+0
 balance_from
 balance_to
 ```
@@ -322,7 +287,7 @@ amount
 Success Response:
 
 ```
-ok
+0
 balance
 ```
 
@@ -341,21 +306,23 @@ amount
 Sucess Response:
 
 ```
-ok
+0
 balance
 ```
 
 Errors: 4 Inactive account | 5 Account overdraw | 6 Illegal argument
 
-# Errors
+# Status Codes
 
-| Error Code | Description                   |
-| ---------- | ----------------------------- |
-| 0          | Internal Error.               |
-| 1          | Account does not exist.       |
-| 2          | Account could not be created. |
-| 3          | Account could not be closed.  |
-| 4          | Inactive account.             |
-| 5          | Account overdraw.             |
-| 6          | Illegal argument.             |
-| 7          | Bad request.                  |
+| Status Code | Description                   |
+| ----------- | ----------------------------- |
+| 0           | OK                            |
+| 1           | Account does not exist.       |
+| 2           | Account could not be created. |
+| 3           | Account could not be closed.  |
+| 4           | Inactive account.             |
+| 5           | Account overdraw.             |
+| 6           | Illegal argument.             |
+| 7           | Bad request.                  |
+| 8           | Internal Error.               |
+

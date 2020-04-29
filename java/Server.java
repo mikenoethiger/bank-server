@@ -23,15 +23,15 @@ import java.lang.Runnable;
 
 public class Server {
 
-    /* error responses according to protocol specification (see readme.md) */
-    private static final String[] ERROR_INTERNAL_ERROR = {"nok", "0", "Internal error."};
-    private static final String[] ERROR_ACCOUNT_DOES_NOT_EXIST = {"nok", "1", "Account does not exist."};
-    private static final String[] ERROR_ACCOUNT_COULD_NOT_BE_CREATED = {"nok", "2", "Account could not be created."};
-    private static final String[] ERROR_ACCOUNT_COULD_NOT_BE_CLOSED = {"nok", "3", "Account could not be closed."};
-    private static final String[] ERROR_INACTIVE_ACCOUNT = {"nok", "4", "Inactive account."};
-    private static final String[] ERROR_ACCOUNT_OVERDRAW = {"nok", "5", "Account overdraw."};
-    private static final String[] ERROR_ILLEGAL_ARGUMENT = {"nok", "6", "Illegal argument."};
-    private static final String[] ERROR_BAD_REQUEST = {"nok", "7", "Bad request."};
+    /* error responses according to protocol specification (see readme.md#actions) */
+    private static final String[] ERROR_ACCOUNT_DOES_NOT_EXIST = {"1", "Account does not exist."};
+    private static final String[] ERROR_ACCOUNT_COULD_NOT_BE_CREATED = {"2", "Account could not be created."};
+    private static final String[] ERROR_ACCOUNT_COULD_NOT_BE_CLOSED = {"3", "Account could not be closed."};
+    private static final String[] ERROR_INACTIVE_ACCOUNT = {"4", "Inactive account."};
+    private static final String[] ERROR_ACCOUNT_OVERDRAW = {"5", "Account overdraw."};
+    private static final String[] ERROR_ILLEGAL_ARGUMENT = {"6", "Illegal argument."};
+    private static final String[] ERROR_BAD_REQUEST = {"7", "Bad request."};
+    private static final String[] ERROR_INTERNAL_ERROR = {"8", "Internal error."};
 
     /* request/response delimiter according to protocol specification (see readme.md) */
     private static final char DELIMITER = '\n';
@@ -39,17 +39,15 @@ public class Server {
     /* pool size for thread pool which handles requests */
     private static final int POOL_SIZE = 50;
 
-    /* states for request reading algorithm (see readRequest())*/
+    /* states for request reading algorithm (see readRequest()) */
     private static final int STATE_READ = 0;
     private static final int STATE_LINE_BREAK = 1;
 
-    /* Bank instance for manipulating bank data.
-       The current implementation stores all data
-       inside the bank instance. I.e. alla data
-       will be lost upon program termination.
-       This could be changed with another bank
-       implementaion.
-       */
+    /*
+     * Bank instance for manipulating bank data. The current implementation stores all data
+     * inside the bank instance. I.e. alla data will be lost upon program termination.
+     * This could be changed with another bank implementaion.
+     */
     private static final Bank BANK = new Bank();
 
     private static int requests_processed = 0;
@@ -139,20 +137,23 @@ public class Server {
             } catch (IOException e) {
                 System.out.println("failed to handle connection");
             } finally {
-                try { socket.close(); }
-                catch (IOException e) {}
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                }
             }
         }
 
         /**
          * Write a string to out.
-         *
+         * <p>
          * Writes each character as 1 byte as opposed to
          * {@link DataOutputStream#writeChars(String)}
          * which writes each character as 2 bytes.
+         * </p>
          *
          * @param out stream to write to
-         * @param s string to write
+         * @param s   string to write
          * @throws IOException
          */
         private static void writeString(OutputStream out, String s) throws IOException {
@@ -194,18 +195,29 @@ public class Server {
             if (request.length < 1) return ERROR_BAD_REQUEST;
 
             int action;
-            try { action = Integer.parseInt(request[0]); }
-            catch (NumberFormatException e) { return ERROR_BAD_REQUEST; }
+            try {
+                action = Integer.parseInt(request[0]);
+            } catch (NumberFormatException e) {
+                return ERROR_BAD_REQUEST;
+            }
 
             switch (action) {
-                case 1: return getAccountNumbers(request);
-                case 2: return getAccount(request);
-                case 3: return createAccount(request);
-                case 4: return closeAccount(request);
-                case 5: return transfer(request);
-                case 6: return deposit(request);
-                case 7: return withdraw(request);
-                default: return ERROR_BAD_REQUEST;
+                case 1:
+                    return getAccountNumbers(request);
+                case 2:
+                    return getAccount(request);
+                case 3:
+                    return createAccount(request);
+                case 4:
+                    return closeAccount(request);
+                case 5:
+                    return transfer(request);
+                case 6:
+                    return deposit(request);
+                case 7:
+                    return withdraw(request);
+                default:
+                    return ERROR_BAD_REQUEST;
             }
         }
 
@@ -215,8 +227,8 @@ public class Server {
 
         private String[] getAccountNumbers(String[] request) {
             Set<String> accounts = bank.getAccountNumbers();
-            String[] response = new String[accounts.size()+1];
-            response[0] = "ok";
+            String[] response = new String[accounts.size() + 1];
+            response[0] = "0";
             int i = 1;
             for (String a : accounts) {
                 response[i++] = a;
@@ -228,20 +240,20 @@ public class Server {
             if (request.length < 2) return ERROR_BAD_REQUEST;
             Account a = bank.getAccount(request[1]);
             if (a == null) return ERROR_ACCOUNT_DOES_NOT_EXIST;
-            return new String[]{"ok", a.getNumber(), a.getOwner(), String.valueOf(a.getBalance()), a.isActive() ? "1" : "0"};
+            return new String[]{"0", a.getNumber(), a.getOwner(), String.valueOf(a.getBalance()), a.isActive() ? "1" : "0"};
         }
 
         private String[] createAccount(String[] request) {
             if (request.length < 2) return ERROR_BAD_REQUEST;
             Account account = bank.createAccount(request[1]);
             if (account == null) return ERROR_ACCOUNT_COULD_NOT_BE_CREATED;
-            return new String[]{"ok", account.getNumber(), account.getOwner(), String.valueOf(account.getBalance()), account.isActive() ? "1" : "0" };
+            return new String[]{"0", account.getNumber(), account.getOwner(), String.valueOf(account.getBalance()), account.isActive() ? "1" : "0"};
         }
 
         private String[] closeAccount(String[] request) {
             if (request.length < 2) return ERROR_BAD_REQUEST;
             boolean result = bank.closeAccount(request[1]);
-            if (result) return new String[]{"ok"};
+            if (result) return new String[]{"0"};
             else return ERROR_ACCOUNT_COULD_NOT_BE_CLOSED;
         }
 
@@ -255,16 +267,24 @@ public class Server {
 
             // parse amount
             double amount;
-            try { amount = Double.parseDouble(request[3]); }
-            catch (NumberFormatException e) { return ERROR_BAD_REQUEST; }
+            try {
+                amount = Double.parseDouble(request[3]);
+            } catch (NumberFormatException e) {
+                return ERROR_BAD_REQUEST;
+            }
 
             // transfer money
-            try { bank.transfer(from, to, amount); }
-            catch (InactiveException e) { return ERROR_INACTIVE_ACCOUNT; }
-            catch (OverdrawException e) { return ERROR_ACCOUNT_OVERDRAW; }
-            catch (IllegalArgumentException e) { return ERROR_ILLEGAL_ARGUMENT; }
+            try {
+                bank.transfer(from, to, amount);
+            } catch (InactiveException e) {
+                return ERROR_INACTIVE_ACCOUNT;
+            } catch (OverdrawException e) {
+                return ERROR_ACCOUNT_OVERDRAW;
+            } catch (IllegalArgumentException e) {
+                return ERROR_ILLEGAL_ARGUMENT;
+            }
 
-            return new String[]{"ok", String.valueOf(from.getBalance()), String.valueOf(to.getBalance())};
+            return new String[]{"0", String.valueOf(from.getBalance()), String.valueOf(to.getBalance())};
         }
 
         private String[] deposit(String[] request) {
@@ -276,14 +296,21 @@ public class Server {
 
             // parse amount
             double amount;
-            try { amount = Double.parseDouble(request[2]); }
-            catch (NumberFormatException e) { return ERROR_BAD_REQUEST; }
+            try {
+                amount = Double.parseDouble(request[2]);
+            } catch (NumberFormatException e) {
+                return ERROR_BAD_REQUEST;
+            }
 
-            try { a.deposit(amount); }
-            catch (InactiveException e) { return ERROR_INACTIVE_ACCOUNT; }
-            catch (IllegalArgumentException e) { return ERROR_ILLEGAL_ARGUMENT; }
+            try {
+                a.deposit(amount);
+            } catch (InactiveException e) {
+                return ERROR_INACTIVE_ACCOUNT;
+            } catch (IllegalArgumentException e) {
+                return ERROR_ILLEGAL_ARGUMENT;
+            }
 
-            return new String[]{"ok", String.valueOf(a.getBalance())};
+            return new String[]{"0", String.valueOf(a.getBalance())};
         }
 
         private String[] withdraw(String[] request) {
@@ -295,15 +322,23 @@ public class Server {
 
             // parse amount
             double amount;
-            try { amount = Double.parseDouble(request[2]); }
-            catch (NumberFormatException e) { return ERROR_BAD_REQUEST; }
+            try {
+                amount = Double.parseDouble(request[2]);
+            } catch (NumberFormatException e) {
+                return ERROR_BAD_REQUEST;
+            }
 
-            try { a.withdraw(amount); }
-            catch (InactiveException e) { return ERROR_INACTIVE_ACCOUNT; }
-            catch (OverdrawException e) { return ERROR_ACCOUNT_OVERDRAW; }
-            catch (IllegalArgumentException e) { return ERROR_ILLEGAL_ARGUMENT; }
+            try {
+                a.withdraw(amount);
+            } catch (InactiveException e) {
+                return ERROR_INACTIVE_ACCOUNT;
+            } catch (OverdrawException e) {
+                return ERROR_ACCOUNT_OVERDRAW;
+            } catch (IllegalArgumentException e) {
+                return ERROR_ILLEGAL_ARGUMENT;
+            }
 
-            return new String[]{"ok", String.valueOf(a.getBalance())};
+            return new String[]{"0", String.valueOf(a.getBalance())};
         }
     }
 
@@ -377,13 +412,13 @@ public class Server {
         /* thread safe */
         public void transfer(Account from, Account to, double amount)
                 throws InactiveException, OverdrawException {
-                if (amount < 0) throw new IllegalArgumentException("negative amount not allowed");
-                synchronized (transfer_lock) {
-                    if (!from.isActive() || !to.isActive()) throw new InactiveException();
-                    if (from.getBalance() < amount) throw new OverdrawException();
-                    from.withdraw(amount);
-                    to.deposit(amount);
-                }
+            if (amount < 0) throw new IllegalArgumentException("negative amount not allowed");
+            synchronized (transfer_lock) {
+                if (!from.isActive() || !to.isActive()) throw new InactiveException();
+                if (from.getBalance() < amount) throw new OverdrawException();
+                from.withdraw(amount);
+                to.deposit(amount);
+            }
         }
 
     }
@@ -440,6 +475,9 @@ public class Server {
         }
     }
 
-    private static class InactiveException extends Exception {}
-    private static class OverdrawException extends Exception {}
+    private static class InactiveException extends Exception {
+    }
+
+    private static class OverdrawException extends Exception {
+    }
 }
