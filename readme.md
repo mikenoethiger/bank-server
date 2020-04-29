@@ -3,7 +3,7 @@
 
 # About
 
-Minimal bank server backend, providing basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full API specification.) 
+Minimal bank server backend, provides basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full API specification.) 
 
 The code arose during a module in distributed systems at my university. The goal was to implement a banking backend using several technologies/approaches (sockets, http, rest, websockets, graphql, rabbitmq) to see different ways of implementing a distributed system. This is the plain socket implementation. 
 
