@@ -1,11 +1,11 @@
 
-[dockerhub](https://hub.docker.com/r/mikenoethiger/bank-server) | [client implementation](https://github.com/mikenoethiger/bank-client) 
+[dockerhub](https://hub.docker.com/r/mikenoethiger/bank-server) | [client implementation](https://github.com/mikenoethiger/bank-client)
 
 # About
 
-Minimal bank server backend, provides basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full API specification.) 
+Minimal bank server backend, provides basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full API specification.)
 
-The code arose during a module in distributed systems at my university. The goal was to implement a banking backend using several technologies/approaches (sockets, http, rest, websockets, graphql, rabbitmq) to see different ways of implementing a distributed system. This is the plain socket implementation. 
+The code arose during a module in distributed systems at my university. The goal was to implement a banking backend using several technologies/approaches (sockets, http, rest, websockets, graphql, rabbitmq) to see different ways of implementing a distributed system. This is the plain socket implementation.
 
 A custom text protocol ensures consent (see chapter [Protocol](#Protocol).)
 
@@ -185,7 +185,7 @@ Success Response:
 0
 ```
 
-Errors: 3 Account could not be closed
+Errors: 1 Account does not exist | 3 Account could not be closed
 
 ## Transfer (5)
 
@@ -206,7 +206,7 @@ balance_from
 balance_to
 ```
 
-Errors: 4 Inactive account | 5 Account overdraw | 6 Illegal argument
+Errors: 1 Account does not exist | 4 Inactive account | 5 Account overdraw | 6 Illegal argument
 
 ## Deposit (6)
 
@@ -225,7 +225,7 @@ Success Response:
 balance
 ```
 
-Errors: 4 Inactive account | 6 Illegal argument
+Errors: 1 Account does not exist | 4 Inactive account | 6 Illegal argument
 
 ## Withdraw (7)
 
@@ -244,7 +244,7 @@ Sucess Response:
 balance
 ```
 
-Errors: 4 Inactive account | 5 Account overdraw | 6 Illegal argument
+Errors: 1 Account does not exist | 4 Inactive account | 5 Account overdraw | 6 Illegal argument
 
 # Status Codes
 
