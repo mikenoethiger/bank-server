@@ -1,109 +1,43 @@
 
-[dockerhub](https://hub.docker.com/repository/docker/mikenoethiger/bank-server) | [client implementation](https://github.com/mikenoethiger/bank-client) 
+[dockerhub](https://hub.docker.com/r/mikenoethiger/bank-server) | [client implementation](https://github.com/mikenoethiger/bank-client) 
 
 # About
 
-Minimal bank server, providing basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full api specification.) Communication with clients is established through sockets. A custom text protocol ensures consent (see chapter [Protocol](#Protocol).)
+Minimal bank server backend, providing basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full API specification.) 
 
-# Run with Java
+The code arose during a module in distributed systems at my university. The goal was to implement a banking backend using several technologies/approaches (sockets, http, rest, websockets, graphql, rabbitmq) to see different ways of implementing a distributed system. This is the plain socket implementation. 
 
-Compile:
+A custom text protocol ensures consent (see chapter [Protocol](#Protocol).)
 
-```
-cd java
-javac Server.java Client.java
-```
+# Run Server
 
-Show usages:
+Compile and run on port `5001`:
 
 ```
-java Server
-java Client
+$ cd java && ./compile.sh
+$ java Server 5001
 ```
 
-Run Server on port `5001`:
+> Alternatively use the `mikenoethiger/bank-server` image from [dockerhub](https://hub.docker.com/r/mikenoethiger/bank-server) to run the server with docker.
+> E.g. `docker run --rm -p 5001:5001 mikenoethiger/bank-server`
+
+# Send Requests
+
+Use any TCP/IP client to connect to the server on `host:port` and send a request according to the [Protocol](#protocol) (e.g. [nc](https://linux.die.net/man/1/nc).)  
+
+Or use the `Client` program from this repo:
 
 ```
-java Server 5001
-```
-
-Send a request to the server via command line (CLI) client:
-
-```
-java Client <ip> <port> <action> [arguments]
+$ java Client <host> <port> <action> [arguments]
 ```
 
 E.g. create an account:
 
 ```
-java Client 127.0.0.1 5001 3 mike
+$ java Client 127.0.0.1 5001 3 mike
 ```
 
-In order to speak with the server from java code, refer to the [bank-client](https://github.com/mikenoethiger/bank-client) project which provides a java client implementation.
-
-A very simple alternative to the CLI client is using the [nc](https://linux.die.net/man/1/nc) program which ships out of the box in most linux distributions:
-
-```
-nc 127.0.0.1 5001
-3
-mike
-
-
-```
-
-First enter the nc command, then the text you want to send to the server. Make sure to terminate the request with two line breaks, otherwise the server waits for request termination (this is part of the [Protocol](#protocol).)
-
-# Run with Docker
-
-Alternatively use the docker image published on [Dockerhub](https://hub.docker.com/repository/docker/mikenoethiger/bank-server) to run the server and/or client. You can find some examples in the following.
-
-## Docker Server Usage
-
-Run server on (default) port `5001` in foreground (will be deleted upon `CTRL+C`):
-
-```
-docker run --rm -p 5001:5001 mikenoethiger/bank-server
-```
-
-Run server on custom port `1234` in background (`-d`) and name the container `bank-server`:
-
-```
-docker run -d -p 1234:1234 --name bank-server mikenoethiger/bank-server Server 1234
-```
-
-Show `stdout` of a named container:
-
-```
-docker logs bank-server
-```
-
-Stop and remove a named container:
-
-```
-docker rm -f bank-sever
-```
-
-## Docker Client Usage
-
-The same docker image also contains the compiled CLI client. If both, the client and the server run in a container they need to be connected to the same docker network in order to communicate with each other.
-
-Create a docker network (execute only once):
-
-```
-docker network create bank-server
-```
-
-Start a server that is attached to the network:
-
-```
-docker run --rm -d -p 5001:5001 --name bank-server --network bank-server mikenoethiger/bank-server
-```
-
-Send requests to the `bank-server` container:
-
-```
-docker run --rm --network bank-server mikenoethiger/bank-server Client bank-server 5001 3 mike
-```
+> If you want to connect from java code, take a look [here](https://github.com/mikenoethiger/bank-client/tree/master/src/main/java/bank/socket).
 
 # Protocol
 
