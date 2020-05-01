@@ -18,7 +18,7 @@ Or execute the **script** `./run_server.sh` (make sure to grant execution rights
 
 Or with **gradle** `gradle run`
 
-Or use the [docker image](https://hub.docker.com/r/mikenoethiger/bank-server-socket) `docker run --rm -p 5001:5001 mikenoethiger/bank-server`
+Or use the [docker image](https://hub.docker.com/r/mikenoethiger/bank-server-socket) `docker run --rm -p 5001:5001 mikenoethiger/bank-server-server`
 
 
 # Send Requests
