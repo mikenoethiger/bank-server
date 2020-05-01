@@ -154,7 +154,8 @@ Errors: 1 Account does not exist
 Request:
 
 ```
-3 owner
+3 
+owner
 ```
 
 Success Response:
