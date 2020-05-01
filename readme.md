@@ -2,38 +2,35 @@
 
 # About
 
-Minimal bank server backend, provides basic banking operations, such as creating an account or transfer money (see chapter [Actions](#Actions) for full API specification.)
+Java socket implementation for the server backend. The client counterpart can be found [here](https://github.com/mikenoethiger/bank-client/tree/master/src/main/java/bank/socket). 
 
-The code arose during a module in distributed systems at my university. The goal was to implement a banking backend using several technologies/approaches (sockets, http, rest, websockets, graphql, rabbitmq) to see different ways of implementing a distributed system. This is the plain socket implementation.
+A simple text protocol ensures consent between server/client (see chapter [Protocol](#Protocol).) 
 
-A custom text protocol ensures consent (see chapter [Protocol](#Protocol).)
+Historically this was the first backend implementation, which is why most other implementations rely on the text protocol specified here.
+That is because the protocol models the banking domain pretty well (i.e. banking operations, results, errors etc. see [Actions](#Actions), [Status Codes](#status-codes)) which makes it convenient to use on top of the various technologies/protocols (http, websockets, message queues etc.) 
+
 
 # Run Server
 
-Compile and run on port `5001`:
+In your **IDE**, run `bank.Server` as Java Application.
 
-```
-$ cd java && ./compile.sh
-$ java Server 5001
-```
+Or execute the **script** `./run_server.sh` (make sure to grant execution rights `chmod u+x run_server.sh`)
 
-> Alternatively use the `mikenoethiger/bank-server` image from [dockerhub](https://hub.docker.com/r/mikenoethiger/bank-server) to run the server with docker.
-> E.g. `docker run --rm -p 5001:5001 mikenoethiger/bank-server`
+Or with **gradle** `gradle run`
+
+Or use the [docker image](https://hub.docker.com/r/mikenoethiger/bank-server-socket) `docker run --rm -p 5001:5001 mikenoethiger/bank-server`
+
 
 # Send Requests
 
-Use any TCP/IP client to connect to the server on `host:port` and send a request according to the [Protocol](#protocol) (e.g. [nc](https://linux.die.net/man/1/nc).)  
+Use any TCP/IP client to connect to the server and send a request according to the [Protocol](#protocol) (e.g. with [nc](https://linux.die.net/man/1/nc) `nc localhost 5001`)  
 
-Or use the `Client` program from this repo:
+Or use the `Client` CLI program: `./run_client.sh` (make sure to grant execution rights `chmod u+x run_client.sh`)
 
-```
-$ java Client <host> <port> <action> [arguments]
-```
-
-E.g. create an account:
+E.g. to create an account:
 
 ```
-$ java Client 127.0.0.1 5001 3 mike
+$ ./run_client.sh localhost 5001 3 mike
 ```
 
 > If you want to connect from java code, take a look [here](https://github.com/mikenoethiger/bank-client/tree/master/src/main/java/bank/socket).
@@ -88,7 +85,7 @@ Actual response encoding:
 [status_code]\n[response_data1]\n[response_data2]\n\n
 ```
 
-# Actions
+## Actions
 
 This chapter is a summary of available actions. An action is something that a client can request the server to perform using the custom text protocol.
 
@@ -112,7 +109,7 @@ Means zero or more accounts may follow.
 
 For the sake of compactness, the terminating `\n\n` is omitted in all stated requests/responses.
 
-## Get Account Numbers (1)
+### Get Account Numbers (1)
 
 Request:
 
@@ -128,7 +125,7 @@ account_1
 account_n
 ```
 
-## Get Account (2)
+### Get Account (2)
 
 Request:
 
@@ -149,7 +146,7 @@ active
 
 Errors: 1 Account does not exist
 
-## Create Account (3)
+### Create Account (3)
 
 Request:
 
@@ -170,7 +167,7 @@ active
 
 Errors: 2 Account could not be created
 
-## Close Account (4)
+### Close Account (4)
 
 Request:
 
@@ -187,7 +184,7 @@ Success Response:
 
 Errors: 1 Account does not exist | 3 Account could not be closed
 
-## Transfer (5)
+### Transfer (5)
 
 Request:
 
@@ -208,7 +205,7 @@ balance_to
 
 Errors: 1 Account does not exist | 4 Inactive account | 5 Account overdraw | 6 Illegal argument
 
-## Deposit (6)
+### Deposit (6)
 
 Request:
 
@@ -227,7 +224,7 @@ balance
 
 Errors: 1 Account does not exist | 4 Inactive account | 6 Illegal argument
 
-## Withdraw (7)
+### Withdraw (7)
 
 Request:
 
@@ -246,7 +243,7 @@ balance
 
 Errors: 1 Account does not exist | 4 Inactive account | 5 Account overdraw | 6 Illegal argument
 
-# Status Codes
+## Status Codes
 
 | Status Code | Description                   |
 | ----------- | ----------------------------- |

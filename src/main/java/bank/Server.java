@@ -1,7 +1,7 @@
+package bank;
 
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.net.InetSocketAddress;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,7 +12,6 @@ import java.lang.NumberFormatException;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.IllegalFormatException;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,6 +21,8 @@ import java.util.concurrent.Executors;
 import java.lang.Runnable;
 
 public class Server {
+
+    private static final int DEFAULT_PORT = 5001;
 
     /* error responses according to protocol specification (see readme.md#actions) */
     private static final String[] ERROR_ACCOUNT_DOES_NOT_EXIST = {"1", "Account does not exist."};
@@ -54,14 +55,14 @@ public class Server {
     private static final Object LOCK = new Object();
 
     public static void main(String[] args) throws IOException {
-        if (args.length < 1) {
-            printUsage();
-            return;
+        int port = DEFAULT_PORT;
+        if (args.length > 0) {
+            port = Integer.parseInt(args[0]);
         }
-        int port = Integer.parseInt(args[0]);
 
         ExecutorService pool = Executors.newFixedThreadPool(POOL_SIZE);
         ServerSocket server = new ServerSocket(port);
+        System.out.println(String.format("Started server on port %s. (You can change this by passing the port as a program argument.)", port));
         System.out.println("listening...");
 
         try {

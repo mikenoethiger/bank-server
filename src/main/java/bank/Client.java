@@ -1,3 +1,5 @@
+package bank;
+
 import java.net.Socket;
 import java.io.OutputStream;
 import java.io.InputStream;
