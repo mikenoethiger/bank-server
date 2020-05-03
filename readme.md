@@ -7,7 +7,7 @@ Java socket implementation for the server backend. The client counterpart can be
 A simple text protocol ensures consent between server/client (see chapter [Protocol](#Protocol).) 
 
 Historically this was the first backend implementation, which is why most other implementations rely on the text protocol specified here.
-That is because the protocol models the banking domain pretty well (i.e. banking operations, results, errors etc. see [Actions](#Actions), [Status Codes](#status-codes)) which makes it convenient to use on top of the various technologies/protocols (http, websockets, message queues etc.) 
+That is because the protocol models the banking domain pretty well (i.e. banking operations, results, errors etc. see [Actions](#Actions), [Status Codes](#status-codes)) which makes it convenient to use on top of other technologies/protocols such as http, websocket, message queues etc. 
 
 
 # Run Server
